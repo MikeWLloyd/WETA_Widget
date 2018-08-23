@@ -8,6 +8,8 @@ import datetime
 #print datetime.datetime.now().strftime('%H:%M')
 # 24 hour clock. 
 
+#https://www.crummy.com/software/BeautifulSoup/bs3/documentation.html#arg-attrs
+
 def current_track(main_data, current_time):
 
     for start_time in main_data:
@@ -49,8 +51,28 @@ def current_track(main_data, current_time):
 
         last_entry = start_time
 
+
+def today_playlist(main_data):
+    playlist=[]
+    for start_time in main_data:
+        time_only = start_time.find('div', attrs={'class':'field-start-time'})
+        time = time_only.text.strip()
+
+        #datetime_object = datetime.datetime.strptime(time, '%I:%M %p').strftime('%I:%M %p')
+        datetime_object = datetime.datetime.strptime(time, '%I:%M %p').strftime('%H:%M')
+
+        composer_find = start_time.find('div', attrs={'class':'field-composer'})
+        next_composer = composer_find.text.strip()
+        
+        piece_find = start_time.find('h4')
+        next_piece = piece_find.text.strip()
+
+        #print('The next piece is: %s composed by %s will start at %s' % (next_piece, next_composer, time))
+        playlist.append((next_piece, next_composer, datetime.datetime.strptime(time, '%I:%M %p').strftime('%I:%M %p')))
+
+    return(playlist)
+
 def getpage():
-    
 
     # specify the url
     quote_page = 'https://weta.org/fm/playlists'
@@ -71,6 +93,7 @@ if __name__ == "__main__":
     current_time = datetime.datetime.now().strftime('%H:%M')
     full_playlist = getpage()
     current_track(full_playlist, current_time)
+    today_playlist(full_playlist)
 
 # time = '11:54 pm'
 # datetime_object = datetime.datetime.strptime(time, '%I:%M %p').strftime('%I:%M %p')
