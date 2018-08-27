@@ -88,13 +88,31 @@ def getpage():
 
     return(main_data)
 
+def getpagefordate(date):
+
+    # specify the url
+    quote_page = ('https://weta.org/fm/playlists/%s' % date)
+    #https://weta.org/fm/playlists/2018-08-23
+
+    # query the website and return the html to the variable page
+    page = urlopen(quote_page)
+
+    # parse the html using beautiful soup and store in variable soup
+    soup = BeautifulSoup(page, 'html.parser')
+
+    # get the index start-time
+    main_data = soup.findAll('div', attrs={'class':'ds-1col node node-fm-playlist node-promoted view-mode-full clearfix'})
+
+    return(main_data)
 
 if __name__ == "__main__":
     current_time = datetime.datetime.now().strftime('%H:%M')
     full_playlist = getpage()
     current_track(full_playlist, current_time)
     today_playlist(full_playlist)
-
+    date_data = getpagefordate('2018-08-23')
+    print(date_data)
+    today_playlist(date_data)
 # time = '11:54 pm'
 # datetime_object = datetime.datetime.strptime(time, '%I:%M %p').strftime('%I:%M %p')
 
