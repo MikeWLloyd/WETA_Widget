@@ -9,6 +9,8 @@ import datetime
 import re
 import unicodedata
 import WETA
+import vlc
+
 
 def get_time():
     return datetime.datetime.now().strftime('%H:%M')
@@ -26,6 +28,17 @@ def strip_accents(text):
     text = text.encode('ascii', 'ignore')
     text = text.decode("utf-8")
     return str(text)
+def start_player():
+    url = 'https://stream.weta.org:8010/fmlive'
+    #define VLC instance
+    instance = vlc.Instance('--input-repeat=-1', '--fullscreen')
+    #Define VLC player
+    player=instance.media_player_new()
+    #Define VLC media
+    media=instance.media_new(url)
+    player.set_media(media)
+    return player
+
 
 class Application(tk.Frame):
     def __init__(self, master=None):
@@ -40,7 +53,16 @@ class Application(tk.Frame):
         self.playlist = tk.Button(self, text="Today's Playlist", command=self.display_playlist).grid(column=2, row=1)
         self.dateplaylist = tk.Button(self, text="Playlist Lookup", command=self.dated_playlist).grid(column=2, row=2)
         self.composer_find = tk.Button(self, text="Find Composer", command=self.search_composer).grid(column=1, row=1)
+        self.play_stream = tk.Button(self, text="Play/Pause", command=self.media_player).grid(column=0, row=1)
+        self.restart_stream = tk.Button(self, text="Go Live", command=self.jumptonow).grid(column=1, row=2)
+        #self.color = tk.Text(self,width=3,height=1,background='snow2').grid(column=1, row=2)
         self.exit = tk.Button(self, text="Quit", command=root.destroy).grid(column=3, row=6, sticky=tk.E)
+
+
+        self.scalevar = tk.IntVar()
+        self.scalevar.set(100)
+        self.slider = tk.Scale(self, from_=0, to=100, variable=self.scalevar, orient=tk.HORIZONTAL, command=self.changevolume).grid(column=0, row=2)
+        #self.slider.set(100)
 
         self.txt = tk.Text(self,width=65,height=7,background='snow2',wrap=tk.WORD)
         #width and height is number of charecters or carriage returns. 
@@ -72,6 +94,37 @@ class Application(tk.Frame):
 
         self.after(10000, self.onUpdate)
         #do this every ~10 seconds
+
+    def media_player(self):
+        state = player.get_state()
+        if state == 0 or state == 5:
+            player.play()
+         #   self.color.tk.itemconfig(i, fill="blue")
+        elif state == 3:
+            player.pause()
+        elif state == 4:
+            player.play()
+
+        # 0: 'NothingSpecial',
+        # 1: 'Opening',
+        # 2: 'Buffering',
+        # 3: 'Playing',
+        # 4: 'Paused',
+        # 5: 'Stopped',
+        # 6: 'Ended',
+        # 7: 'Error',
+        # https://linuxconfig.org/how-to-play-audio-with-vlc-in-python
+        # https://stackoverflow.com/questions/45842385/how-can-i-play-audio-stream-without-saving-it-into-the-file-with-pyglet
+
+    def changevolume(self,volume):
+        state = player.get_state()
+        if state == 3 or state == 4:
+            player.audio_set_volume(int(volume))
+        #print(volume)
+
+    def jumptonow(self):
+        player.stop()
+        player.play()
 
     def display_playlist(self):
         if self.window == None or not tk.Toplevel.winfo_exists(self.window):
@@ -223,6 +276,7 @@ class Application(tk.Frame):
 
 
 if __name__ == "__main__":
+    player = start_player()
     full_playlist = WETA.getpage()
     
     current_time=get_time()
@@ -230,6 +284,9 @@ if __name__ == "__main__":
     cur_printout, next_printout = refresh_piece(cur_piece, cur_composer, cur_piece_time, next_time, next_piece, next_composer)
 
     root = tk.Tk()
+    img = tk.Image("photo", file="weta_icon.gif")
+    # root.iconphoto(True, img) # you may also want to try this.
+    root.tk.call('wm','iconphoto', root._w, img)
     root.title("WETA Information")
     root.resizable(width=False, height=False)
     app = Application(master=root)
