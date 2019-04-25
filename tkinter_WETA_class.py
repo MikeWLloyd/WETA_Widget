@@ -10,7 +10,7 @@ import re
 import unicodedata
 import WETA
 import vlc
-
+import os
 
 def get_time():
     return datetime.datetime.now().strftime('%H:%M')
@@ -56,8 +56,8 @@ class Application(tk.Frame):
         self.play_stream = tk.Button(self, text="Play/Pause", command=self.media_player).grid(column=0, row=1)
         self.restart_stream = tk.Button(self, text="Go Live", command=self.jumptonow).grid(column=1, row=2)
         #self.color = tk.Text(self,width=3,height=1,background='snow2').grid(column=1, row=2)
-        self.exit = tk.Button(self, text="Quit", command=root.destroy).grid(column=3, row=6, sticky=tk.E)
-
+        self.stop_stream = tk.Button(self, text="Stop", command=self.stopstream).grid(column=0, row=6)
+        self.exit = tk.Button(self, text="Quit", command=root.destroy).grid(column=2, row=6)
 
         self.scalevar = tk.IntVar()
         self.scalevar.set(100)
@@ -125,6 +125,9 @@ class Application(tk.Frame):
     def jumptonow(self):
         player.stop()
         player.play()
+
+    def stopstream(self):
+        player.stop()
 
     def display_playlist(self):
         if self.window == None or not tk.Toplevel.winfo_exists(self.window):
@@ -276,6 +279,10 @@ class Application(tk.Frame):
 
 
 if __name__ == "__main__":
+    abspath = os.path.abspath(__file__)
+    dname = os.path.dirname(abspath)
+    os.chdir(dname)
+
     player = start_player()
     full_playlist = WETA.getpage()
     
